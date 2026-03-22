@@ -1,0 +1,21 @@
+package RADGenieDesign;
+
+{$R 'RADGenie.Design.res'}
+{$DESIGNONLY}
+
+requires
+  rtl,
+  vcl,
+  dbrtl,
+  bindcomp,
+  SmartCoreAI,
+  SmartCoreAIVCL,
+  designide;
+
+contains
+  uRADGenie.Controller.Main in 'Controller\uRADGenie.Controller.Main.pas',
+  uRADGenie.Controller.Menu in 'Controller\uRADGenie.Controller.Menu.pas',
+  uRADGenie.View.Options in 'View\uRADGenie.View.Options.pas' {RADGenieOptionsFrame: TFrame},
+  uRADGenie.Model.AI in 'Model\uRADGenie.Model.AI.pas';
+
+end.
