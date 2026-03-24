@@ -16,6 +16,9 @@ contains
   uRADGenie.Controller.Main in 'Controller\uRADGenie.Controller.Main.pas',
   uRADGenie.Controller.Menu in 'Controller\uRADGenie.Controller.Menu.pas',
   uRADGenie.View.Options in 'View\uRADGenie.View.Options.pas' {RADGenieOptionsFrame: TFrame},
-  uRADGenie.Model.AI in 'Model\uRADGenie.Model.AI.pas';
+  uRADGenie.View.AISelector in 'View\uRADGenie.View.AISelector.pas',
+  uRADGenie.View.Validation in 'View\uRADGenie.View.Validation.pas',
+  uRADGenie.Model.AI in 'Model\uRADGenie.Model.AI.pas',
+  uRADGenie.Model.Logger in 'Model\uRADGenie.Model.Logger.pas';
 
 end.
