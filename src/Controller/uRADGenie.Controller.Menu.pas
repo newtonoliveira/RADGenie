@@ -18,7 +18,8 @@ uses
   uRADGenie.Model.AI,
   uRADGenie.Model.Logger,
   uRADGenie.View.AISelector,
-  uRADGenie.View.Validation;
+  uRADGenie.View.Validation,
+  uRADGenie.View.CodePrompt;
 
 type
   TRADGenieMenuService = class
@@ -357,8 +358,7 @@ begin
   if not SelectAIProfile(objProfile) then
     Exit;
 
-  strInstruction := '';
-  if not InputQuery('RADGenie Wizard', 'Instruction to generate code', strInstruction) then
+  if not ShowCodePromptDialog(strInstruction) then
     Exit;
 
   strUnitText := CaptureActiveUnitText;
