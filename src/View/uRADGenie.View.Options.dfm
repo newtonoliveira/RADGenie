@@ -75,8 +75,6 @@ object RADGenieOptionsFrame: TRADGenieOptionsFrame
     Top = 204
     Width = 520
     Height = 23
-    TabStop = False
-    ReadOnly = True
     TabOrder = 4
   end
   object edtApiKey: TEdit

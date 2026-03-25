@@ -152,16 +152,16 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <DCC_UsePackage>vcl;rtl;dbrtl;bindcomp;SmartCoreAI;SmartCoreAIVCL;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>vcl;rtl;dbrtl;bindcomp;SmartCoreAI;SmartCoreAIVCL;vclwinx;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <DCC_UsePackage>vcl;rtl;dbrtl;bindcomp;SmartCoreAI;SmartCoreAIVCL;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>vcl;rtl;dbrtl;bindcomp;SmartCoreAI;SmartCoreAIVCL;vclwinx;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64x)'!=''">
-        <DCC_UsePackage>vcl;rtl;dbrtl;bindcomp;SmartCoreAI;SmartCoreAIVCL;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>vcl;rtl;dbrtl;bindcomp;SmartCoreAI;SmartCoreAIVCL;vclwinx;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_WinARM64EC)'!=''">
-        <DCC_UsePackage>vcl;rtl;dbrtl;bindcomp;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>vcl;rtl;dbrtl;bindcomp;vclwinx;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -199,6 +199,7 @@
         <DCCReference Include="bindcomp.dcp"/>
         <DCCReference Include="SmartCoreAI.dcp"/>
         <DCCReference Include="SmartCoreAIVCL.dcp"/>
+        <DCCReference Include="vclwinx.dcp"/>
         <DCCReference Include="designide.dcp"/>
         <DCCReference Include="Controller\uRADGenie.Controller.Main.pas"/>
         <DCCReference Include="Controller\uRADGenie.Controller.Menu.pas"/>
@@ -207,9 +208,15 @@
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="View\uRADGenie.View.AISelector.pas"/>
-        <DCCReference Include="View\uRADGenie.View.Validation.pas"/>
+        <DCCReference Include="View\uRADGenie.View.Validation.pas">
+            <Form>frmRADGenieValidation</Form>
+        </DCCReference>
+        <DCCReference Include="View\uRADGenie.View.CodePrompt.pas">
+            <Form>frmRADGenieCodePrompt</Form>
+        </DCCReference>
         <DCCReference Include="Model\uRADGenie.Model.AI.pas"/>
         <DCCReference Include="Model\uRADGenie.Model.Logger.pas"/>
+        <DCCReference Include="Controller\uRADGenie.Controller.StatusBar.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

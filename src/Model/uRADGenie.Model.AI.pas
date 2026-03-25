@@ -1,4 +1,4 @@
-unit uRADGenie.Model.AI;
+﻿unit uRADGenie.Model.AI;
 
 interface
 

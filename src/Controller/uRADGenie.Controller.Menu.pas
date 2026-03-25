@@ -19,7 +19,8 @@ uses
   uRADGenie.Model.Logger,
   uRADGenie.View.AISelector,
   uRADGenie.View.Validation,
-  uRADGenie.View.CodePrompt;
+  uRADGenie.View.CodePrompt,
+  uRADGenie.Controller.StatusBar;
 
 type
   TRADGenieMenuService = class
@@ -29,6 +30,7 @@ type
     FobjMenuValidate: TMenuItem;
     FobjMenuViewLog: TMenuItem;
     FobjEditorPopup: TPopupMenu;
+    FobjStatusBarSvc: TRADGenieStatusBarService;
     function GetActiveSourceEditor: IOTASourceEditor;
     function FindEditorPopupMenu(const objNTAServices: INTAServices): TPopupMenu;
     function CaptureActiveUnitText: string;
@@ -40,7 +42,7 @@ type
     procedure DoValidateClick(objSender: TObject);
     procedure DoViewLogClick(objSender: TObject);
   public
-    constructor Create;
+    constructor Create(const objStatusBarSvc: TRADGenieStatusBarService);
     destructor Destroy; override;
     procedure RegisterContextMenu;
     procedure UnregisterContextMenu;
@@ -316,6 +318,17 @@ var
   iSelectedIndex: Integer;
 begin
   Result := False;
+
+  // When the status bar service has a pinned profile, use it directly without
+  // loading settings or opening any dialog.
+  if Assigned(FobjStatusBarSvc) and
+     FobjStatusBarSvc.GetCurrentProfile(objProfile) then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  // No pinned profile — resolve via settings.
   objSettings   := TRADGenieAISettings.LoadFromJsonFile(
     TRADGenieAISettings.GetDefaultFilePath);
   arrConfigured := objSettings.GetConfiguredProfiles;
@@ -332,19 +345,29 @@ begin
   if Length(arrConfigured) = 1 then
   begin
     objProfile := arrConfigured[0];
-    Result := True;
+    Result     := True;
     Exit;
   end;
 
-  // Multiple active profiles — ask the user
+  // Multiple active profiles and status bar is in auto mode (or unavailable):
+  // pick the best one automatically without opening a dialog.
+  if Assigned(FobjStatusBarSvc) then
+  begin
+    iSelectedIndex := objSettings.SelectBestProfileIndex(arrConfigured);
+    objProfile     := arrConfigured[iSelectedIndex];
+    Result         := True;
+    Exit;
+  end;
+
+  // Fallback: no status bar service available — ask the user explicitly.
   if not ShowAISelector(arrConfigured, iSelectedIndex) then
     Exit; // user cancelled
 
-  if iSelectedIndex = -1 then // Auto
+  if iSelectedIndex = -1 then // user chose "Auto"
     iSelectedIndex := objSettings.SelectBestProfileIndex(arrConfigured);
 
   objProfile := arrConfigured[iSelectedIndex];
-  Result := True;
+  Result     := True;
 end;
 
 procedure TRADGenieMenuService.DoMenuClick(objSender: TObject);
@@ -442,9 +465,12 @@ begin
   ShellExecute(0, 'open', PChar(strLogPath), nil, nil, SW_SHOWNORMAL);
 end;
 
-constructor TRADGenieMenuService.Create;
+constructor TRADGenieMenuService.Create(
+  const objStatusBarSvc: TRADGenieStatusBarService);
 begin
   inherited Create;
+  // The status bar service is owned by TRADGenieWizard; we only hold a reference.
+  FobjStatusBarSvc := objStatusBarSvc;
   // Defer registration so the IDE finishes loading all its forms before we
   // search for the editor popup menu (Screen.Forms is incomplete at package load time).
   TThread.Queue(nil, RegisterContextMenu);

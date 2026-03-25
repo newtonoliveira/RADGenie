@@ -39,6 +39,7 @@ type
     procedure SetIsActive(bValue: Boolean);
     function GetIsPriority: Boolean;
     procedure SetIsPriority(bValue: Boolean);
+    procedure SetApiKeyVisible(bVisible: Boolean);
     procedure ShowInfo(const strMessage: string);
     procedure ShowError(const strMessage: string);
   end;
@@ -109,6 +110,7 @@ type
     procedure SetIsActive(bValue: Boolean);
     function GetIsPriority: Boolean;
     procedure SetIsPriority(bValue: Boolean);
+    procedure SetApiKeyVisible(bVisible: Boolean);
     procedure ShowInfo(const strMessage: string);
     procedure ShowError(const strMessage: string);
     // Event handlers
@@ -246,6 +248,7 @@ begin
     IfThen(objProfile.strBaseUrl.Trim <> '',
       objProfile.strBaseUrl,
       TRADGenieAIDriverCatalog.GetDefaultBaseUrl(strDriverName)));
+  FobjView.SetApiKeyVisible(not SameText(strDriverName, 'Ollama'));
   FobjView.SetApiKey(objProfile.strApiKey);
   FobjView.SetIsActive(objProfile.bActive);
   FobjView.SetIsPriority(objProfile.bPriority);
@@ -408,6 +411,8 @@ begin
       iFoundProfile := iProfile;
       Break;
     end;
+
+  FobjView.SetApiKeyVisible(not SameText(strDriverName, 'Ollama'));
 
   if iFoundProfile >= 0 then
   begin
@@ -652,6 +657,13 @@ end;
 procedure TRADGenieOptionsFrame.SetIsPriority(bValue: Boolean);
 begin
   chkPriority.Checked := bValue;
+end;
+
+procedure TRADGenieOptionsFrame.SetApiKeyVisible(bVisible: Boolean);
+begin
+  lblApiKey.Visible    := bVisible;
+  edtApiKey.Visible    := bVisible;
+  btnGetApiKey.Visible := bVisible;
 end;
 
 procedure TRADGenieOptionsFrame.ShowInfo(const strMessage: string);

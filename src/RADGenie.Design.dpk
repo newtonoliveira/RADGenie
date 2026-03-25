@@ -1,7 +1,32 @@
 package RADGenieDesign;
 
 {$R 'RADGenie.Design.res'}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
 {$DESIGNONLY}
+{$IMPLICITBUILD ON}
 
 requires
   rtl,
@@ -10,6 +35,7 @@ requires
   bindcomp,
   SmartCoreAI,
   SmartCoreAIVCL,
+  vclwinx,
   designide;
 
 contains
@@ -17,8 +43,10 @@ contains
   uRADGenie.Controller.Menu in 'Controller\uRADGenie.Controller.Menu.pas',
   uRADGenie.View.Options in 'View\uRADGenie.View.Options.pas' {RADGenieOptionsFrame: TFrame},
   uRADGenie.View.AISelector in 'View\uRADGenie.View.AISelector.pas',
-  uRADGenie.View.Validation in 'View\uRADGenie.View.Validation.pas',
+  uRADGenie.View.Validation in 'View\uRADGenie.View.Validation.pas' {frmRADGenieValidation},
+  uRADGenie.View.CodePrompt in 'View\uRADGenie.View.CodePrompt.pas' {frmRADGenieCodePrompt},
   uRADGenie.Model.AI in 'Model\uRADGenie.Model.AI.pas',
-  uRADGenie.Model.Logger in 'Model\uRADGenie.Model.Logger.pas';
+  uRADGenie.Model.Logger in 'Model\uRADGenie.Model.Logger.pas',
+  uRADGenie.Controller.StatusBar in 'Controller\uRADGenie.Controller.StatusBar.pas';
 
 end.
