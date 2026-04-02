@@ -33,8 +33,6 @@ requires
   vcl,
   dbrtl,
   bindcomp,
-  SmartCoreAI,
-  SmartCoreAIVCL,
   vclwinx,
   designide;
 
@@ -45,8 +43,13 @@ contains
   uRADGenie.View.AISelector in 'View\uRADGenie.View.AISelector.pas',
   uRADGenie.View.Validation in 'View\uRADGenie.View.Validation.pas' {frmRADGenieValidation},
   uRADGenie.View.CodePrompt in 'View\uRADGenie.View.CodePrompt.pas' {frmRADGenieCodePrompt},
+  uRADGenie.View.Composer in 'View\uRADGenie.View.Composer.pas' {frmRADGenieComposer},
   uRADGenie.Model.AI in 'Model\uRADGenie.Model.AI.pas',
+  uRADGenie.Model.Editor in 'Model\uRADGenie.Model.Editor.pas',
   uRADGenie.Model.Logger in 'Model\uRADGenie.Model.Logger.pas',
+  uRADGenie.View.Diff in 'View\uRADGenie.View.Diff.pas',
+  uRADGenie.Controller.ComposerDockRef in 'Controller\uRADGenie.Controller.ComposerDockRef.pas',
+  uRADGenie.Controller.ComposerWizard in 'Controller\uRADGenie.Controller.ComposerWizard.pas',
   uRADGenie.Controller.StatusBar in 'Controller\uRADGenie.Controller.StatusBar.pas';
 
 end.

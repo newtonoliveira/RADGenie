@@ -7,7 +7,8 @@ uses
   ToolsAPI,
   uRADGenie.Controller.Menu,
   uRADGenie.Controller.StatusBar,
-  uRADGenie.View.Options;
+  uRADGenie.View.Options,
+  uRADGenie.Controller.ComposerWizard;
 
 type
   TRADGenieWizard = class(TNotifierObject, IOTAWizard)
@@ -30,6 +31,7 @@ implementation
 
 var
   GobjWizard: IOTAWizard;
+  GobjComposerWizard: IOTAWizard;
 
 constructor TRADGenieWizard.Create;
 begin
@@ -73,6 +75,8 @@ procedure Register;
 begin
   GobjWizard := TRADGenieWizard.Create;
   RegisterPackageWizard(GobjWizard);
+  GobjComposerWizard := TRADGenieComposerMenuWizard.Create;
+  RegisterPackageWizard(GobjComposerWizard);
 end;
 
 end.

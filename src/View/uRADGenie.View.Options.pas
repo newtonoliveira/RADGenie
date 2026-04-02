@@ -6,16 +6,17 @@ uses
   System.SysUtils,
   System.StrUtils,
   System.Classes,
+  Winapi.Messages,
+  Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
   Vcl.StdCtrls,
   Vcl.Dialogs,
   Winapi.Windows,
   Winapi.ShellAPI,
+  Vcl.Themes,
   ToolsAPI,
-  uRADGenie.Model.AI,
-  SmartCoreAI.Types,
-  SmartCoreAI.Driver.Claude;
+  uRADGenie.Model.AI;
 
 type
   IRADGenieOptionsView = interface
@@ -88,9 +89,10 @@ type
     btnTestConnection: TButton;
     chkActive: TCheckBox;
     chkPriority: TCheckBox;
-    AIClaudeDriver1: TAIClaudeDriver;
   private
     FobjPresenter: TRADGenieOptionsPresenter;
+    procedure ApplyThemeColors;
+    procedure CMStyleChanged(var objMessage: TMessage); message CM_STYLECHANGED;
     // IRADGenieOptionsView — profile list
     procedure SetProfileNames(const objNames: TStrings);
     function GetSelectedProfileIndex: Integer;
@@ -751,6 +753,38 @@ begin
   btnTestConnection.OnClick  := btnTestConnectionClick;
   chkActive.OnClick          := chkActiveClick;
   chkPriority.OnClick        := chkPriorityClick;
+  ApplyThemeColors;
+end;
+
+procedure TRADGenieOptionsFrame.ApplyThemeColors;
+var
+  objBgColor: TColor;
+  objWinColor: TColor;
+  objTextColor: TColor;
+begin
+  objBgColor := StyleServices.GetSystemColor(clBtnFace);
+  objWinColor := StyleServices.GetSystemColor(clWindow);
+  objTextColor := StyleServices.GetSystemColor(clWindowText);
+
+  Color := objBgColor;
+  Font.Color := objTextColor;
+
+  lstProfiles.Color := objWinColor;
+  lstProfiles.Font.Color := objTextColor;
+  cmbDriver.Color := objWinColor;
+  cmbDriver.Font.Color := objTextColor;
+  edtBaseUrl.Color := objWinColor;
+  edtBaseUrl.Font.Color := objTextColor;
+  edtApiKey.Color := objWinColor;
+  edtApiKey.Font.Color := objTextColor;
+  cmbModelName.Color := objWinColor;
+  cmbModelName.Font.Color := objTextColor;
+end;
+
+procedure TRADGenieOptionsFrame.CMStyleChanged(var objMessage: TMessage);
+begin
+  inherited;
+  ApplyThemeColors;
 end;
 
 { TRADGenieAddInOptions }

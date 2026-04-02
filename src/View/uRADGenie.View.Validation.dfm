@@ -10,6 +10,7 @@ object frmRADGenieValidation: TfrmRADGenieValidation
   Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poScreenCenter
+  OnCreate = FormCreate
   object pnlButtons: TPanel
     Left = 0
     Top = 532

@@ -11,6 +11,7 @@ object frmRADGenieCodePrompt: TfrmRADGenieCodePrompt
   Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poScreenCenter
+  OnCreate = FormCreate
   object lblInstruction: TLabel
     Left = 12
     Top = 12

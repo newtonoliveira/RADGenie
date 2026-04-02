@@ -126,8 +126,4 @@ object RADGenieOptionsFrame: TRADGenieOptionsFrame
     Caption = 'Test Connection'
     TabOrder = 10
   end
-  object AIClaudeDriver1: TAIClaudeDriver
-    Left = 248
-    Top = 240
-  end
 end

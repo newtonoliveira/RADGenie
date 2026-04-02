@@ -1,4 +1,4 @@
-﻿unit uRADGenie.Model.AI;
+unit uRADGenie.Model.AI;
 
 interface
 
@@ -10,19 +10,8 @@ uses
   System.NetEncoding,
   System.Net.HttpClient,
   uRADGenie.Model.Logger,
-  SmartCoreAI.Comp.Connection,
-  SmartCoreAI.Comp.JSON,
-  SmartCoreAI.Comp.Image,
-  SmartCoreAI.Comp.Chat,
   Data.Bind.ObjectScope,
-  SmartCoreAI.VCLUI.LiveBindings,
-  SmartCoreAI.LiveBindings.Core,
-  Data.Bind.Components,
-  SmartCoreAI.Types,
-  SmartCoreAI.Driver.Claude,
-  SmartCoreAI.Driver.Gemini,
-  SmartCoreAI.Driver.OpenAI,
-  SmartCoreAI.Driver.Ollama;
+  Data.Bind.Components;
 
 type
   ERADGenieAI = class(Exception);

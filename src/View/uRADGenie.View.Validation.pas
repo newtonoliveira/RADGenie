@@ -22,11 +22,14 @@ implementation
 uses
   System.SysUtils,
   System.Classes,
+  Winapi.Messages,
+  Vcl.Graphics,
   Vcl.Forms,
   Vcl.Controls,
   Vcl.StdCtrls,
   Vcl.ExtCtrls,
-  Vcl.ComCtrls;
+  Vcl.ComCtrls,
+  Vcl.Themes;
 
 const
   TAG_OPEN  = '<CORRECAO>';
@@ -215,6 +218,9 @@ type
     richAnalysis: TRichEdit;
   private
     FstrCorrectedCode: string;
+    procedure ApplyThemeColors;
+    procedure CMStyleChanged(var objMessage: TMessage); message CM_STYLECHANGED;
+    procedure FormCreate(Sender: TObject);
     procedure LoadRtf(const strText: string);
   public
     procedure PrepareContent(const strFullResponse: string);
@@ -222,6 +228,38 @@ type
   end;
 
 {$R *.DFM}
+
+procedure TfrmRADGenieValidation.ApplyThemeColors;
+var
+  objBgColor: TColor;
+  objWinColor: TColor;
+  objTextColor: TColor;
+begin
+  objBgColor := StyleServices.GetSystemColor(clBtnFace);
+  objWinColor := StyleServices.GetSystemColor(clWindow);
+  objTextColor := StyleServices.GetSystemColor(clWindowText);
+
+  Color := objBgColor;
+  Font.Color := objTextColor;
+  pnlButtons.Color := objBgColor;
+  pnlCode.Color := objBgColor;
+  pnlAnalysis.Color := objBgColor;
+  memoCode.Color := objWinColor;
+  memoCode.Font.Color := objTextColor;
+  richAnalysis.Color := objWinColor;
+  richAnalysis.Font.Color := objTextColor;
+end;
+
+procedure TfrmRADGenieValidation.CMStyleChanged(var objMessage: TMessage);
+begin
+  inherited;
+  ApplyThemeColors;
+end;
+
+procedure TfrmRADGenieValidation.FormCreate(Sender: TObject);
+begin
+  ApplyThemeColors;
+end;
 
 procedure TfrmRADGenieValidation.LoadRtf(const strText: string);
 var
