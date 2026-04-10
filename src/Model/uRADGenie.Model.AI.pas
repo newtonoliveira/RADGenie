@@ -747,6 +747,9 @@ begin
       objResponseValue.Free;
     end;
   finally
+    // Release response interface before freeing the HTTP client to avoid
+    // accessing freed memory during interface finalization.
+    objResponse := nil;
     objHttp.Free;
   end;
 end;

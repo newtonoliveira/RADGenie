@@ -2,7 +2,7 @@ object RADGenieOptionsFrame: TRADGenieOptionsFrame
   Left = 0
   Top = 0
   Width = 540
-  Height = 440
+  Height = 450
   TabOrder = 0
   object lblProfiles: TLabel
     Left = 8
@@ -110,20 +110,25 @@ object RADGenieOptionsFrame: TRADGenieOptionsFrame
     State = cbChecked
     TabOrder = 8
   end
-  object chkPriority: TCheckBox
-    Left = 136
-    Top = 356
-    Width = 200
-    Height = 20
-    Caption = 'Priority (Auto selects this one)'
-    TabOrder = 9
-  end
   object btnTestConnection: TButton
     Left = 8
     Top = 392
     Width = 160
     Height = 25
     Caption = 'Test Connection'
-    TabOrder = 10
+    TabOrder = 9
+  end
+  object lblCredits: TLabel
+    Left = 8
+    Top = 424
+    Width = 524
+    Height = 13
+    Caption = 'Desenvolvido por Newton Michel de Oliveira (newton.oliveira@nghc.com.br) e Victor Ghilardi (vhghilardi@gmail.com)'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clGrayText
+    Font.Height = -11
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
   end
 end

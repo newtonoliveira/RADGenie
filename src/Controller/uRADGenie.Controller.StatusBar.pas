@@ -18,7 +18,6 @@ type
   TRADGenieStatusBarService = class
   private
     FobjPinnedProfile: TRADGenieAIProfile;
-    FbAutoMode: Boolean;
     procedure UpdatePanelText;
     procedure OnMouseDown(objSender: TObject; objButton: TMouseButton;
       objShift: TShiftState; iX, iY: Integer);
@@ -33,10 +32,10 @@ type
 implementation
 
 const
-  C_PANEL_WIDTH  = 240;
-  C_PANEL_PREFIX = ' RADGenie | ';
-  C_LABEL_AUTO   = 'Auto';
-  C_BAR_HEIGHT   = 22;
+  C_PANEL_WIDTH    = 240;
+  C_PANEL_PREFIX   = ' RADGenie | ';
+  C_LABEL_SELECT   = 'Select AI...';
+  C_BAR_HEIGHT     = 22;
 
 var
   GbBarCreated: Boolean                        = False;
@@ -76,7 +75,6 @@ end;
 constructor TRADGenieStatusBarService.Create;
 begin
   inherited Create;
-  FbAutoMode        := True;
   GobjActiveService := Self;
   TryCreateBar;
 end;
@@ -119,7 +117,7 @@ begin
     GobjPanel           := GobjBar.Panels.Add;
     GobjPanel.Width     := C_PANEL_WIDTH;
     GobjPanel.Alignment := taLeftJustify;
-    GobjPanel.Text      := C_PANEL_PREFIX + C_LABEL_AUTO;
+    GobjPanel.Text      := C_PANEL_PREFIX + C_LABEL_SELECT;
     if Assigned(GobjActiveService) then
       GobjBar.OnMouseDown := GobjActiveService.OnMouseDown;
     GbBarCreated := True;
@@ -142,8 +140,8 @@ begin
   if not Assigned(GobjPanel) then
     Exit;
   try
-    if FbAutoMode then
-      strLabel := C_LABEL_AUTO
+    if FobjPinnedProfile.strDriverName = '' then
+      strLabel := C_LABEL_SELECT
     else
       strLabel := FobjPinnedProfile.DisplayName;
     GobjPanel.Text := C_PANEL_PREFIX + strLabel;
@@ -182,19 +180,12 @@ begin
     if Length(arrConfigured) = 1 then
     begin
       FobjPinnedProfile := arrConfigured[0];
-      FbAutoMode        := False;
       UpdatePanelText;
       Exit;
     end;
     if not ShowAISelector(arrConfigured, iSelectedIndex) then
       Exit;
-    if iSelectedIndex = -1 then
-      FbAutoMode := True
-    else
-    begin
-      FobjPinnedProfile := arrConfigured[iSelectedIndex];
-      FbAutoMode        := False;
-    end;
+    FobjPinnedProfile := arrConfigured[iSelectedIndex];
     UpdatePanelText;
   except
     on E: Exception do
@@ -208,7 +199,7 @@ begin
   Result := False;
   if not GbBarCreated then
     TryCreateBar;
-  if FbAutoMode then
+  if FobjPinnedProfile.strDriverName = '' then
     Exit;
   objProfile := FobjPinnedProfile;
   Result     := True;

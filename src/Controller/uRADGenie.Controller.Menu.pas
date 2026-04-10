@@ -328,7 +328,7 @@ begin
     Exit;
   end;
 
-  // No pinned profile — resolve via settings.
+  // No pinned profile in status bar — resolve via settings.
   objSettings   := TRADGenieAISettings.LoadFromJsonFile(
     TRADGenieAISettings.GetDefaultFilePath);
   arrConfigured := objSettings.GetConfiguredProfiles;
@@ -349,22 +349,9 @@ begin
     Exit;
   end;
 
-  // Multiple active profiles and status bar is in auto mode (or unavailable):
-  // pick the best one automatically without opening a dialog.
-  if Assigned(FobjStatusBarSvc) then
-  begin
-    iSelectedIndex := objSettings.SelectBestProfileIndex(arrConfigured);
-    objProfile     := arrConfigured[iSelectedIndex];
-    Result         := True;
-    Exit;
-  end;
-
-  // Fallback: no status bar service available — ask the user explicitly.
+  // Multiple active profiles and no pinned profile — ask the user explicitly.
   if not ShowAISelector(arrConfigured, iSelectedIndex) then
     Exit; // user cancelled
-
-  if iSelectedIndex = -1 then // user chose "Auto"
-    iSelectedIndex := objSettings.SelectBestProfileIndex(arrConfigured);
 
   objProfile := arrConfigured[iSelectedIndex];
   Result     := True;
@@ -378,32 +365,38 @@ var
   objClient: TRADGenieAIClient;
   strGeneratedCode: string;
 begin
-  if not SelectAIProfile(objProfile) then
-    Exit;
-
-  if not ShowCodePromptDialog(strInstruction) then
-    Exit;
-
-  strUnitText := CaptureActiveUnitText;
-  if strUnitText.Trim = '' then
-    Exit;
-
-  Screen.Cursor := crHourGlass;
   try
-    objClient := TRADGenieAIClient.Create(objProfile);
+    if not SelectAIProfile(objProfile) then
+      Exit;
+
+    if not ShowCodePromptDialog(strInstruction) then
+      Exit;
+
+    strUnitText := CaptureActiveUnitText;
+    if strUnitText.Trim = '' then
+      Exit;
+
+    Screen.Cursor := crHourGlass;
     try
-      strGeneratedCode := objClient.GenerateCode(strUnitText, strInstruction);
+      objClient := TRADGenieAIClient.Create(objProfile);
+      try
+        strGeneratedCode := objClient.GenerateCode(strUnitText, strInstruction);
+      finally
+        objClient.Free;
+      end;
     finally
-      objClient.Free;
+      Screen.Cursor := crDefault;
     end;
-  finally
-    Screen.Cursor := crDefault;
+
+    if strGeneratedCode.Trim = '' then
+      Exit;
+
+    InjectCodeAtCursor(strGeneratedCode);
+  except
+    on objEx: Exception do
+      MessageDlg('RADGenie - Generate Code' + sLineBreak + objEx.Message,
+        mtError, [mbOK], 0);
   end;
-
-  if strGeneratedCode.Trim = '' then
-    Exit;
-
-  InjectCodeAtCursor(strGeneratedCode);
 end;
 
 procedure TRADGenieMenuService.DoValidateClick(objSender: TObject);
@@ -415,37 +408,43 @@ var
   strAnalysis: string;
   strCorrectedCode: string;
 begin
-  strSelectedText := GetSelectedText;
-  if strSelectedText.Trim = '' then
-  begin
-    MessageDlg(
-      'Please select a code block in the editor before using this feature.',
-      mtInformation, [mbOK], 0);
-    Exit;
-  end;
-
-  if not SelectAIProfile(objProfile) then
-    Exit;
-
-  strUnitText := CaptureActiveUnitText;
-
-  Screen.Cursor := crHourGlass;
   try
-    objClient := TRADGenieAIClient.Create(objProfile);
-    try
-      strAnalysis := objClient.ValidateCode(strSelectedText, strUnitText);
-    finally
-      objClient.Free;
+    strSelectedText := GetSelectedText;
+    if strSelectedText.Trim = '' then
+    begin
+      MessageDlg(
+        'Please select a code block in the editor before using this feature.',
+        mtInformation, [mbOK], 0);
+      Exit;
     end;
-  finally
-    Screen.Cursor := crDefault;
+
+    if not SelectAIProfile(objProfile) then
+      Exit;
+
+    strUnitText := CaptureActiveUnitText;
+
+    Screen.Cursor := crHourGlass;
+    try
+      objClient := TRADGenieAIClient.Create(objProfile);
+      try
+        strAnalysis := objClient.ValidateCode(strSelectedText, strUnitText);
+      finally
+        objClient.Free;
+      end;
+    finally
+      Screen.Cursor := crDefault;
+    end;
+
+    if strAnalysis.Trim = '' then
+      Exit;
+
+    if ShowValidationResult(strAnalysis, strSelectedText, strCorrectedCode) then
+      ReplaceSelectedText(strCorrectedCode);
+  except
+    on objEx: Exception do
+      MessageDlg('RADGenie - Validate Selection' + sLineBreak + objEx.Message,
+        mtError, [mbOK], 0);
   end;
-
-  if strAnalysis.Trim = '' then
-    Exit;
-
-  if ShowValidationResult(strAnalysis, strCorrectedCode) then
-    ReplaceSelectedText(strCorrectedCode);
 end;
 
 procedure TRADGenieMenuService.DoViewLogClick(objSender: TObject);

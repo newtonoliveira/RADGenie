@@ -3,7 +3,7 @@ unit uRADGenie.View.AISelector;
 {
   Shows a dialog so the user can choose which AI profile to use for an operation.
   Returns True if accepted.
-  iSelectedIndex = -1 means "Auto" (let the engine pick the best profile).
+  iSelectedIndex is the zero-based index into arrProfiles of the chosen profile.
 }
 
 interface
@@ -62,8 +62,6 @@ begin
     objList.Width     := 356;
     objList.Height    := 128;
     objList.TabOrder  := 0;
-    // "Auto" always first
-    objList.Items.Add('Auto  (Best available)');
     for iProfile := 0 to High(arrProfiles) do
       objList.Items.Add(arrProfiles[iProfile].DisplayName);
     objList.ItemIndex := 0;
@@ -91,8 +89,7 @@ begin
     if objForm.ShowModal = mrOk then
     begin
       Result := True;
-      // Index 0 in list = Auto (-1); index 1..n = profile 0..n-1
-      iSelectedIndex := objList.ItemIndex - 1;
+      iSelectedIndex := objList.ItemIndex;
     end;
   finally
     objForm.Free;
