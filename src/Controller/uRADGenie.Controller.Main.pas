@@ -6,11 +6,14 @@ uses
   System.SysUtils,
   ToolsAPI,
   uRADGenie.Controller.Menu,
-  uRADGenie.View.Options;
+  uRADGenie.Controller.StatusBar,
+  uRADGenie.View.Options,
+  uRADGenie.Controller.ComposerWizard;
 
 type
   TRADGenieWizard = class(TNotifierObject, IOTAWizard)
   private
+    FobjStatusBarSvc: TRADGenieStatusBarService;
     FobjMenuService: TRADGenieMenuService;
     FobjOptionsRegistrar: TRADGenieOptionsRegistrar;
   public
@@ -28,11 +31,14 @@ implementation
 
 var
   GobjWizard: IOTAWizard;
+  GobjComposerWizard: IOTAWizard;
 
 constructor TRADGenieWizard.Create;
 begin
   inherited Create;
-  FobjMenuService := TRADGenieMenuService.Create;
+  // StatusBar service must be created first so it can be passed to MenuService.
+  FobjStatusBarSvc  := TRADGenieStatusBarService.Create;
+  FobjMenuService   := TRADGenieMenuService.Create(FobjStatusBarSvc);
   FobjOptionsRegistrar := TRADGenieOptionsRegistrar.Create;
   FobjOptionsRegistrar.RegisterOptions;
 end;
@@ -41,6 +47,8 @@ destructor TRADGenieWizard.Destroy;
 begin
   FobjOptionsRegistrar.Free;
   FobjMenuService.Free;
+  // StatusBar service is freed last because MenuService holds a reference to it.
+  FobjStatusBarSvc.Free;
   inherited Destroy;
 end;
 
@@ -67,6 +75,8 @@ procedure Register;
 begin
   GobjWizard := TRADGenieWizard.Create;
   RegisterPackageWizard(GobjWizard);
+  GobjComposerWizard := TRADGenieComposerMenuWizard.Create;
+  RegisterPackageWizard(GobjComposerWizard);
 end;
 
 end.

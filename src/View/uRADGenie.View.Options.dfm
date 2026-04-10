@@ -75,8 +75,6 @@ object RADGenieOptionsFrame: TRADGenieOptionsFrame
     Top = 204
     Width = 520
     Height = 23
-    TabStop = False
-    ReadOnly = True
     TabOrder = 4
   end
   object edtApiKey: TEdit
@@ -127,9 +125,5 @@ object RADGenieOptionsFrame: TRADGenieOptionsFrame
     Height = 25
     Caption = 'Test Connection'
     TabOrder = 10
-  end
-  object AIClaudeDriver1: TAIClaudeDriver
-    Left = 248
-    Top = 240
   end
 end

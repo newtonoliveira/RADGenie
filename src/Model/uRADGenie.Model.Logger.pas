@@ -23,9 +23,6 @@ type
 
 implementation
 
-const
-  MAX_LOG_BYTES = 512 * 1024; // 500 KB — rotate when exceeded
-
 class function TRADGenieLogger.GetLogFilePath: string;
 var
   strDir: string;
@@ -40,20 +37,18 @@ class procedure TRADGenieLogger.WriteToFile(const strLine: string);
 var
   strPath: string;
   objFile: TStreamWriter;
+  dtFileDate: TDateTime;
 begin
   try
     strPath := GetLogFilePath;
     ForceDirectories(TPath.GetDirectoryName(strPath));
 
-    // Rotate: if file > MAX_LOG_BYTES, keep only the last half
-    if TFile.Exists(strPath) and (TFile.GetSize(strPath) > MAX_LOG_BYTES) then
+    // Delete the log when it belongs to a previous calendar day.
+    if TFile.Exists(strPath) then
     begin
-      var strContent := TFile.ReadAllText(strPath, TEncoding.UTF8);
-      var iMid      := Length(strContent) div 2;
-      var iNewline  := Pos(sLineBreak, strContent, iMid);
-      if iNewline > 0 then
-        strContent := Copy(strContent, iNewline + Length(sLineBreak), MaxInt);
-      TFile.WriteAllText(strPath, strContent, TEncoding.UTF8);
+      dtFileDate := TFile.GetLastWriteTime(strPath);
+      if Trunc(dtFileDate) < Trunc(Now) then
+        TFile.Delete(strPath);
     end;
 
     objFile := TStreamWriter.Create(strPath, True, TEncoding.UTF8);

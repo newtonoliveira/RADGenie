@@ -6,16 +6,17 @@ uses
   System.SysUtils,
   System.StrUtils,
   System.Classes,
+  Winapi.Messages,
+  Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
   Vcl.StdCtrls,
   Vcl.Dialogs,
   Winapi.Windows,
   Winapi.ShellAPI,
+  Vcl.Themes,
   ToolsAPI,
-  uRADGenie.Model.AI,
-  SmartCoreAI.Types,
-  SmartCoreAI.Driver.Claude;
+  uRADGenie.Model.AI;
 
 type
   IRADGenieOptionsView = interface
@@ -39,6 +40,7 @@ type
     procedure SetIsActive(bValue: Boolean);
     function GetIsPriority: Boolean;
     procedure SetIsPriority(bValue: Boolean);
+    procedure SetApiKeyVisible(bVisible: Boolean);
     procedure ShowInfo(const strMessage: string);
     procedure ShowError(const strMessage: string);
   end;
@@ -87,9 +89,10 @@ type
     btnTestConnection: TButton;
     chkActive: TCheckBox;
     chkPriority: TCheckBox;
-    AIClaudeDriver1: TAIClaudeDriver;
   private
     FobjPresenter: TRADGenieOptionsPresenter;
+    procedure ApplyThemeColors;
+    procedure CMStyleChanged(var objMessage: TMessage); message CM_STYLECHANGED;
     // IRADGenieOptionsView — profile list
     procedure SetProfileNames(const objNames: TStrings);
     function GetSelectedProfileIndex: Integer;
@@ -109,6 +112,7 @@ type
     procedure SetIsActive(bValue: Boolean);
     function GetIsPriority: Boolean;
     procedure SetIsPriority(bValue: Boolean);
+    procedure SetApiKeyVisible(bVisible: Boolean);
     procedure ShowInfo(const strMessage: string);
     procedure ShowError(const strMessage: string);
     // Event handlers
@@ -246,6 +250,7 @@ begin
     IfThen(objProfile.strBaseUrl.Trim <> '',
       objProfile.strBaseUrl,
       TRADGenieAIDriverCatalog.GetDefaultBaseUrl(strDriverName)));
+  FobjView.SetApiKeyVisible(not SameText(strDriverName, 'Ollama'));
   FobjView.SetApiKey(objProfile.strApiKey);
   FobjView.SetIsActive(objProfile.bActive);
   FobjView.SetIsPriority(objProfile.bPriority);
@@ -408,6 +413,8 @@ begin
       iFoundProfile := iProfile;
       Break;
     end;
+
+  FobjView.SetApiKeyVisible(not SameText(strDriverName, 'Ollama'));
 
   if iFoundProfile >= 0 then
   begin
@@ -654,6 +661,13 @@ begin
   chkPriority.Checked := bValue;
 end;
 
+procedure TRADGenieOptionsFrame.SetApiKeyVisible(bVisible: Boolean);
+begin
+  lblApiKey.Visible    := bVisible;
+  edtApiKey.Visible    := bVisible;
+  btnGetApiKey.Visible := bVisible;
+end;
+
 procedure TRADGenieOptionsFrame.ShowInfo(const strMessage: string);
 begin
   MessageDlg(strMessage, mtInformation, [mbOK], 0);
@@ -739,6 +753,38 @@ begin
   btnTestConnection.OnClick  := btnTestConnectionClick;
   chkActive.OnClick          := chkActiveClick;
   chkPriority.OnClick        := chkPriorityClick;
+  ApplyThemeColors;
+end;
+
+procedure TRADGenieOptionsFrame.ApplyThemeColors;
+var
+  objBgColor: TColor;
+  objWinColor: TColor;
+  objTextColor: TColor;
+begin
+  objBgColor := StyleServices.GetSystemColor(clBtnFace);
+  objWinColor := StyleServices.GetSystemColor(clWindow);
+  objTextColor := StyleServices.GetSystemColor(clWindowText);
+
+  Color := objBgColor;
+  Font.Color := objTextColor;
+
+  lstProfiles.Color := objWinColor;
+  lstProfiles.Font.Color := objTextColor;
+  cmbDriver.Color := objWinColor;
+  cmbDriver.Font.Color := objTextColor;
+  edtBaseUrl.Color := objWinColor;
+  edtBaseUrl.Font.Color := objTextColor;
+  edtApiKey.Color := objWinColor;
+  edtApiKey.Font.Color := objTextColor;
+  cmbModelName.Color := objWinColor;
+  cmbModelName.Font.Color := objTextColor;
+end;
+
+procedure TRADGenieOptionsFrame.CMStyleChanged(var objMessage: TMessage);
+begin
+  inherited;
+  ApplyThemeColors;
 end;
 
 { TRADGenieAddInOptions }
