@@ -38,8 +38,6 @@ type
     function GetBaseUrl: string;
     function GetIsActive: Boolean;
     procedure SetIsActive(bValue: Boolean);
-    function GetIsPriority: Boolean;
-    procedure SetIsPriority(bValue: Boolean);
     procedure SetApiKeyVisible(bVisible: Boolean);
     procedure ShowInfo(const strMessage: string);
     procedure ShowError(const strMessage: string);
@@ -57,7 +55,6 @@ type
     procedure SaveCurrentEditsToProfile;
     procedure LoadProfileToView(const objProfile: TRADGenieAIProfile);
     procedure RefreshProfileList;
-    procedure EnforceOnePriority(iProfileIndex: Integer);
   public
     constructor Create(const objView: IRADGenieOptionsView);
     procedure Load;
@@ -69,7 +66,6 @@ type
     procedure AddProfile;
     procedure RemoveProfile(iIndex: Integer);
     procedure ActiveChanged;
-    procedure PriorityChanged;
   end;
 
   TRADGenieOptionsFrame = class(TFrame, IRADGenieOptionsView)
@@ -88,7 +84,7 @@ type
     edtBaseUrl: TEdit;
     btnTestConnection: TButton;
     chkActive: TCheckBox;
-    chkPriority: TCheckBox;
+    lblCredits: TLabel;
   private
     FobjPresenter: TRADGenieOptionsPresenter;
     procedure ApplyThemeColors;
@@ -110,8 +106,6 @@ type
     function GetBaseUrl: string;
     function GetIsActive: Boolean;
     procedure SetIsActive(bValue: Boolean);
-    function GetIsPriority: Boolean;
-    procedure SetIsPriority(bValue: Boolean);
     procedure SetApiKeyVisible(bVisible: Boolean);
     procedure ShowInfo(const strMessage: string);
     procedure ShowError(const strMessage: string);
@@ -124,7 +118,6 @@ type
     procedure btnGetApiKeyClick(objSender: TObject);
     procedure btnTestConnectionClick(objSender: TObject);
     procedure chkActiveClick(objSender: TObject);
-    procedure chkPriorityClick(objSender: TObject);
   protected
     procedure Loaded; override;
   public
@@ -228,12 +221,7 @@ begin
   FarrProfiles[iIndex].strModelName := FobjView.GetSelectedModel.Trim;
   FarrProfiles[iIndex].strBaseUrl   := FobjView.GetBaseUrl.Trim;
   FarrProfiles[iIndex].bActive      := FobjView.GetIsActive;
-  FarrProfiles[iIndex].bPriority    := FobjView.GetIsPriority;
   FarrProfiles[iIndex].strName      := FarrProfiles[iIndex].DisplayName;
-
-  // If just set as priority, clear it from all others
-  if FarrProfiles[iIndex].bPriority then
-    EnforceOnePriority(iIndex);
 end;
 
 procedure TRADGenieOptionsPresenter.LoadProfileToView(
@@ -253,7 +241,6 @@ begin
   FobjView.SetApiKeyVisible(not SameText(strDriverName, 'Ollama'));
   FobjView.SetApiKey(objProfile.strApiKey);
   FobjView.SetIsActive(objProfile.bActive);
-  FobjView.SetIsPriority(objProfile.bPriority);
   RefreshModels;
   FobjView.SetSelectedModel(objProfile.strModelName);
 end;
@@ -267,9 +254,7 @@ begin
   try
     for iProfile := 0 to High(FarrProfiles) do
     begin
-      if FarrProfiles[iProfile].bPriority then
-        objNames.Add(FarrProfiles[iProfile].DisplayName + '  [priority]')
-      else if not FarrProfiles[iProfile].bActive then
+      if not FarrProfiles[iProfile].bActive then
         objNames.Add(FarrProfiles[iProfile].DisplayName + '  [inactive]')
       else
         objNames.Add(FarrProfiles[iProfile].DisplayName);
@@ -278,17 +263,6 @@ begin
   finally
     objNames.Free;
   end;
-end;
-
-procedure TRADGenieOptionsPresenter.EnforceOnePriority(iProfileIndex: Integer);
-var
-  iProfile: Integer;
-begin
-  for iProfile := 0 to High(FarrProfiles) do
-    if iProfile <> iProfileIndex then
-      FarrProfiles[iProfile].bPriority := False;
-  RefreshProfileList;
-  FobjView.SetSelectedProfileIndex(iProfileIndex);
 end;
 
 procedure TRADGenieOptionsPresenter.ProfileSelected(iIndex: Integer);
@@ -367,33 +341,7 @@ end;
 
 procedure TRADGenieOptionsPresenter.ActiveChanged;
 begin
-  // If deactivated, also uncheck priority
-  if not FobjView.GetIsActive then
-    FobjView.SetIsPriority(False);
-end;
-
-procedure TRADGenieOptionsPresenter.PriorityChanged;
-var
-  iIndex: Integer;
-begin
-  // Cannot set priority if profile is inactive
-  if FobjView.GetIsPriority and not FobjView.GetIsActive then
-  begin
-    FobjView.SetIsPriority(False);
-    FobjView.ShowError('Cannot set an inactive AI profile as priority.');
-    Exit;
-  end;
-
-  if not FobjView.GetIsPriority then
-    Exit;
-
-  // Immediately write priority to the in-memory array so EnforceOnePriority works
-  iIndex := FiCurrentProfile;
-  if (iIndex >= 0) and (iIndex <= High(FarrProfiles)) then
-  begin
-    FarrProfiles[iIndex].bPriority := True;
-    EnforceOnePriority(iIndex);
-  end;
+  // No additional action needed when active state changes.
 end;
 
 procedure TRADGenieOptionsPresenter.DriverChanged;
@@ -430,7 +378,6 @@ begin
         TRADGenieAIDriverCatalog.GetDefaultBaseUrl(strDriverName)));
     FobjView.SetApiKey(FarrProfiles[iFoundProfile].strApiKey);
     FobjView.SetIsActive(FarrProfiles[iFoundProfile].bActive);
-    FobjView.SetIsPriority(FarrProfiles[iFoundProfile].bPriority);
   end
   else
   begin
@@ -439,7 +386,6 @@ begin
     FobjView.SetApiKey('');
     FobjView.SetSelectedModel('');
     FobjView.SetIsActive(False);
-    FobjView.SetIsPriority(False);
   end;
 
   RefreshModels;
@@ -651,16 +597,6 @@ begin
   chkActive.Checked := bValue;
 end;
 
-function TRADGenieOptionsFrame.GetIsPriority: Boolean;
-begin
-  Result := chkPriority.Checked;
-end;
-
-procedure TRADGenieOptionsFrame.SetIsPriority(bValue: Boolean);
-begin
-  chkPriority.Checked := bValue;
-end;
-
 procedure TRADGenieOptionsFrame.SetApiKeyVisible(bVisible: Boolean);
 begin
   lblApiKey.Visible    := bVisible;
@@ -735,12 +671,6 @@ begin
     FobjPresenter.ActiveChanged;
 end;
 
-procedure TRADGenieOptionsFrame.chkPriorityClick(objSender: TObject);
-begin
-  if Assigned(FobjPresenter) then
-    FobjPresenter.PriorityChanged;
-end;
-
 procedure TRADGenieOptionsFrame.Loaded;
 begin
   inherited Loaded;
@@ -752,7 +682,6 @@ begin
   btnGetApiKey.OnClick       := btnGetApiKeyClick;
   btnTestConnection.OnClick  := btnTestConnectionClick;
   chkActive.OnClick          := chkActiveClick;
-  chkPriority.OnClick        := chkPriorityClick;
   ApplyThemeColors;
 end;
 

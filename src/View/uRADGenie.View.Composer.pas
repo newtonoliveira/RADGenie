@@ -16,7 +16,8 @@ uses
   Vcl.StdCtrls,
   Vcl.ExtCtrls,
   Vcl.ComCtrls,
-  uRADGenie.Model.AI;
+  uRADGenie.Model.AI,
+  uRADGenie.View.AISelector;
 
 type
   TfrmRADGenieComposer = class(TForm)
@@ -118,7 +119,16 @@ begin
     Exit;
   end;
 
-  iSelectedIndex := objSettings.SelectBestProfileIndex(arrConfigured);
+  if Length(arrConfigured) = 1 then
+  begin
+    objProfile := arrConfigured[0];
+    Result     := True;
+    Exit;
+  end;
+
+  if not ShowAISelector(arrConfigured, iSelectedIndex) then
+    Exit; // user cancelled
+
   objProfile := arrConfigured[iSelectedIndex];
   Result := True;
 end;

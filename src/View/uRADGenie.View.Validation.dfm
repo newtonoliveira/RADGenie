@@ -59,7 +59,7 @@ object frmRADGenieValidation: TfrmRADGenieValidation
       Height = 15
       Caption = 'Corrected code suggested by AI:'
     end
-    object memoCode: TMemo
+    object richCode: TRichEdit
       Left = 8
       Top = 28
       Width = 704

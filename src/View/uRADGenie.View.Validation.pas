@@ -6,14 +6,18 @@ unit uRADGenie.View.Validation;
 
   Layout (top to bottom):
     [alClient]  pnlAnalysis : label + TRichEdit (formatted analysis)
-    [alBottom]  pnlCode     : label + TMemo (corrected code, hidden when absent)
+    [alBottom]  pnlCode     : label + TRichEdit (corrected code with diff colours)
     [alBottom]  pnlButtons  : Close | Apply Correction
+
+  Changed lines in the corrected code are shown in green on a white background.
+  Unchanged lines are shown in black.
 }
 
 interface
 
 function ShowValidationResult(
   const strAnalysis: string;
+  const strOriginalCode: string;
   out strCorrectedCode: string
 ): Boolean;
 
@@ -22,6 +26,7 @@ implementation
 uses
   System.SysUtils,
   System.Classes,
+  System.Generics.Collections,
   Winapi.Messages,
   Vcl.Graphics,
   Vcl.Forms,
@@ -36,7 +41,7 @@ const
   TAG_CLOSE = '</CORRECAO>';
 
 // ---------------------------------------------------------------------------
-// RTF builder
+// RTF helpers
 // ---------------------------------------------------------------------------
 
 function RtfEsc(const s: string): string;
@@ -167,6 +172,78 @@ begin
   end;
 end;
 
+// Builds an RTF string showing a line-level diff between strOriginal and
+// strCorrected.  Changed/added lines are rendered in green; unchanged lines
+// are rendered in black.  Both panels use Courier New for code readability.
+function BuildDiffRtf(const strOriginal, strCorrected: string): string;
+var
+  objOrig, objCorr: TStringList;
+  objFreq: TDictionary<string, Integer>;
+  sb: TStringBuilder;
+  i, iCount: Integer;
+  strLine, strEsc: string;
+  bChanged: Boolean;
+begin
+  objOrig := TStringList.Create;
+  objCorr := TStringList.Create;
+  objFreq := TDictionary<string, Integer>.Create;
+  sb      := TStringBuilder.Create;
+  try
+    objOrig.Text := AdjustLineBreaks(strOriginal);
+    objCorr.Text := AdjustLineBreaks(strCorrected);
+
+    // Build frequency map of original lines for O(1) lookup
+    for i := 0 to objOrig.Count - 1 do
+    begin
+      strLine := objOrig[i];
+      if objFreq.TryGetValue(strLine, iCount) then
+        objFreq[strLine] := iCount + 1
+      else
+        objFreq.Add(strLine, 1);
+    end;
+
+    // RTF header
+    // colortbl: colour 1 = black, colour 2 = dark green
+    sb.Append('{\rtf1\ansi\ansicpg1252\deff0'#13#10);
+    sb.Append('{\fonttbl{\f0\fmodern\fcharset0 Courier New;}}'#13#10);
+    sb.Append('{\colortbl;\red0\green0\blue0;\red0\green128\blue0;}'#13#10);
+    sb.Append('\f0\fs18'#13#10);
+
+    for i := 0 to objCorr.Count - 1 do
+    begin
+      strLine := objCorr[i];
+
+      // Determine whether this line is new/changed
+      bChanged := True;
+      if objFreq.TryGetValue(strLine, iCount) and (iCount > 0) then
+      begin
+        bChanged := False;
+        if iCount = 1 then
+          objFreq.Remove(strLine)
+        else
+          objFreq[strLine] := iCount - 1;
+      end;
+
+      // Tabs → 4 spaces so RTF renders indentation correctly
+      strLine := StringReplace(strLine, #9, '    ', [rfReplaceAll]);
+      strEsc  := RtfEsc(strLine);
+
+      if bChanged then
+        sb.Append('\pard\cf2 ' + strEsc + '\par'#13#10)
+      else
+        sb.Append('\pard\cf1 ' + strEsc + '\par'#13#10);
+    end;
+
+    sb.Append('}');
+    Result := sb.ToString;
+  finally
+    sb.Free;
+    objFreq.Free;
+    objCorr.Free;
+    objOrig.Free;
+  end;
+end;
+
 // ---------------------------------------------------------------------------
 // Extraction
 // ---------------------------------------------------------------------------
@@ -212,18 +289,20 @@ type
     btnClose   : TButton;
     pnlCode    : TPanel;
     lblCode    : TLabel;
-    memoCode   : TMemo;
+    richCode   : TRichEdit;
     pnlAnalysis: TPanel;
     lblAnalysis: TLabel;
     richAnalysis: TRichEdit;
+  published
+    procedure FormCreate(Sender: TObject);
   private
     FstrCorrectedCode: string;
     procedure ApplyThemeColors;
     procedure CMStyleChanged(var objMessage: TMessage); message CM_STYLECHANGED;
-    procedure FormCreate(Sender: TObject);
-    procedure LoadRtf(const strText: string);
+    procedure LoadAnalysisRtf(const strText: string);
+    procedure LoadCodeDiff(const strOriginal, strCorrected: string);
   public
-    procedure PrepareContent(const strFullResponse: string);
+    procedure PrepareContent(const strFullResponse, strOriginalCode: string);
     function GetCorrectedCode: string;
   end;
 
@@ -231,23 +310,27 @@ type
 
 procedure TfrmRADGenieValidation.ApplyThemeColors;
 var
-  objBgColor: TColor;
-  objWinColor: TColor;
+  objBgColor  : TColor;
+  objWinColor : TColor;
   objTextColor: TColor;
 begin
-  objBgColor := StyleServices.GetSystemColor(clBtnFace);
-  objWinColor := StyleServices.GetSystemColor(clWindow);
+  objBgColor   := StyleServices.GetSystemColor(clBtnFace);
+  objWinColor  := StyleServices.GetSystemColor(clWindow);
   objTextColor := StyleServices.GetSystemColor(clWindowText);
 
   Color := objBgColor;
   Font.Color := objTextColor;
-  pnlButtons.Color := objBgColor;
-  pnlCode.Color := objBgColor;
+  pnlButtons.Color  := objBgColor;
+  pnlCode.Color     := objBgColor;
   pnlAnalysis.Color := objBgColor;
-  memoCode.Color := objWinColor;
-  memoCode.Font.Color := objTextColor;
-  richAnalysis.Color := objWinColor;
+
+  richAnalysis.Color      := objWinColor;
   richAnalysis.Font.Color := objTextColor;
+
+  // Code diff panel always uses white background so green/black colours
+  // are readable regardless of the active IDE theme.
+  richCode.Color      := clWhite;
+  richCode.Font.Color := clBlack;
 end;
 
 procedure TfrmRADGenieValidation.CMStyleChanged(var objMessage: TMessage);
@@ -261,7 +344,7 @@ begin
   ApplyThemeColors;
 end;
 
-procedure TfrmRADGenieValidation.LoadRtf(const strText: string);
+procedure TfrmRADGenieValidation.LoadAnalysisRtf(const strText: string);
 var
   objStream  : TMemoryStream;
   strRtf     : string;
@@ -279,7 +362,27 @@ begin
   end;
 end;
 
-procedure TfrmRADGenieValidation.PrepareContent(const strFullResponse: string);
+procedure TfrmRADGenieValidation.LoadCodeDiff(
+  const strOriginal, strCorrected: string);
+var
+  objStream  : TMemoryStream;
+  strRtf     : string;
+  strAnsiRtf : AnsiString;
+begin
+  strRtf     := BuildDiffRtf(strOriginal, strCorrected);
+  strAnsiRtf := AnsiString(strRtf);
+  objStream  := TMemoryStream.Create;
+  try
+    objStream.WriteBuffer(Pointer(strAnsiRtf)^, Length(strAnsiRtf));
+    objStream.Position := 0;
+    richCode.Lines.LoadFromStream(objStream);
+  finally
+    objStream.Free;
+  end;
+end;
+
+procedure TfrmRADGenieValidation.PrepareContent(
+  const strFullResponse, strOriginalCode: string);
 var
   strAnalysisOnly: string;
   bHasCorrection : Boolean;
@@ -287,13 +390,13 @@ begin
   bHasCorrection := ExtractCorrectionBlock(
     strFullResponse, strAnalysisOnly, FstrCorrectedCode);
 
-  LoadRtf(strAnalysisOnly);
+  LoadAnalysisRtf(strAnalysisOnly);
 
-  pnlCode.Visible   := bHasCorrection;
-  btnApply.Enabled  := bHasCorrection;
+  pnlCode.Visible  := bHasCorrection;
+  btnApply.Enabled := bHasCorrection;
 
   if bHasCorrection then
-    memoCode.Text := FstrCorrectedCode;
+    LoadCodeDiff(strOriginalCode, FstrCorrectedCode);
 end;
 
 function TfrmRADGenieValidation.GetCorrectedCode: string;
@@ -307,6 +410,7 @@ end;
 
 function ShowValidationResult(
   const strAnalysis: string;
+  const strOriginalCode: string;
   out strCorrectedCode: string
 ): Boolean;
 var
@@ -316,7 +420,7 @@ begin
   strCorrectedCode := '';
   objForm := TfrmRADGenieValidation.Create(nil);
   try
-    objForm.PrepareContent(strAnalysis);
+    objForm.PrepareContent(strAnalysis, strOriginalCode);
     if objForm.ShowModal = mrOk then
     begin
       strCorrectedCode := objForm.GetCorrectedCode;
